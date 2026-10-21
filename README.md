@@ -1,3 +1,5 @@
+[![Version](https://img.shields.io/github/v/release/Screenly/tfl-bus-status-app)](https://github.com/Screenly/tfl-bus-status-app/releases/latest)
+
 # TFL Bus Information Edge App
 
 This guide will walk you through the steps to create an TFL Bus Status Edge App in Screenly.
