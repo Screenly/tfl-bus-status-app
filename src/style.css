@@ -541,13 +541,25 @@
     padding: 10px 16px;
   }
 
+  /*
+   * Always two lines tall, whatever this turn says, with a shorter notice
+   * centred in that space. The rows are sized to the room left over, so a
+   * strip that grew or shrank as the notices took turns would leave them too
+   * big or too small for it.
+   */
   .details-text {
-    display: -webkit-box;
+    display: flex;
+    height: calc(2 * 1.3em);
     min-width: 0;
     flex: 1;
-    overflow: hidden;
+    align-items: center;
     font-size: 27px;
     line-height: 1.3;
+  }
+
+  .details-copy {
+    display: -webkit-box;
+    overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -678,6 +690,10 @@
     }
 
     .details-text {
+      height: calc(3 * 1.3em);
+    }
+
+    .details-copy {
       -webkit-line-clamp: 3;
     }
 

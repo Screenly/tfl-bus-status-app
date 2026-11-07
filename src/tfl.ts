@@ -7,6 +7,9 @@
 
 export const API_BASE = 'https://api.tfl.gov.uk'
 
+/** Well past a slow answer, well short of the next refresh being due twice. */
+const REQUEST_TIMEOUT_MS = 15 * 1000
+
 /** One predicted arrival, as `StopPoint/{id}/Arrivals` returns it. */
 export interface Arrival {
   id: string
@@ -92,7 +95,10 @@ async function get<T>(path: string, apiKey: string): Promise<T> {
     url.searchParams.set('app_key', apiKey)
   }
 
-  const response = await fetch(url)
+  // A request that never answers would otherwise hold up every refresh after it.
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  })
   if (!response.ok) {
     throw new TflError(explain(response.status), response.status)
   }

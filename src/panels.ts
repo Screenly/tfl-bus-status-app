@@ -171,8 +171,10 @@ export function renderDetails(details: Detail[], index: number): void {
   strip.innerHTML = detail
     ? `<span class="details-route">${escapeText(detail.route)}</span>
        <span class="details-text">
-         <b>${escapeText(detail.label)}</b>
-         ${escapeText(detail.text)}
+         <span class="details-copy">
+           <b>${escapeText(detail.label)}</b>
+           ${escapeText(detail.text)}
+         </span>
        </span>
        ${details.length > 1 ? `<span class="details-count">${(index % details.length) + 1}/${details.length}</span>` : ''}`
     : ''

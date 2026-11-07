@@ -339,16 +339,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     signalReady()
   })
 
+  /*
+   * One refresh at a time. A slow answer that finished after a newer one
+   * would otherwise put older arrivals back on the board. A tick that comes
+   * while one is still running is skipped; requests time out, so a stuck one
+   * cannot hold the board for long.
+   */
+  let refreshing = false
   setInterval(() => {
-    refresh(state, board).catch((error) =>
-      console.error('Could not refresh', error),
-    )
+    if (refreshing) return
+    refreshing = true
+    refresh(state, board)
+      .catch((error) => console.error('Could not refresh', error))
+      .finally(() => {
+        refreshing = false
+      })
   }, ARRIVALS_MS)
 
   // The countdown and the clock move every second without asking TfL.
   setInterval(() => board.draw(), 1000)
 
-  // Several disrupted routes take turns in the details strip.
+  // Several disrupted routes take turns in the details strip. Its height is
+  // fixed in the stylesheet, so a turn never changes the room the rows have.
   setInterval(() => {
     detailIndex += 1
     renderDetails(detailsFor(state, board.capacity()), detailIndex)
