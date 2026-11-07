@@ -114,7 +114,11 @@ async function loadStop(state: State): Promise<void> {
   }
 }
 
-/** Route statuses. A failure leaves the last ones in place. */
+/**
+ * Route statuses. A failure keeps the last ones on the board and still counts
+ * as an attempt, so a TfL outage or rate limit is retried every few minutes
+ * rather than on every arrivals refresh.
+ */
 async function loadStatuses(state: State): Promise<void> {
   const ids = lineIdsOf(state.arrivals)
   const key = ids.join(',')
@@ -122,22 +126,25 @@ async function loadStatuses(state: State): Promise<void> {
     key === state.statusesFor && Date.now() - state.statusesAt < STATUS_MS
   if (ids.length === 0 || fresh) return
 
+  state.statusesAt = Date.now()
+  state.statusesFor = key
   try {
     state.statuses = await fetchLineStatuses(ids, state.apiKey)
-    state.statusesAt = Date.now()
-    state.statusesFor = key
   } catch (error) {
     console.warn('Could not fetch route status', error)
   }
 }
 
-/** Whether the stop itself is closed or has a notice. A failure keeps the last answer. */
+/**
+ * Whether the stop itself is closed or has a notice. A failure keeps the last
+ * answer and, like route statuses, waits the full interval before retrying.
+ */
 async function loadDisruptions(state: State): Promise<void> {
   if (Date.now() - state.disruptionsAt < STATUS_MS) return
 
+  state.disruptionsAt = Date.now()
   try {
     state.disruptions = await fetchStopDisruptions(state.stopId, state.apiKey)
-    state.disruptionsAt = Date.now()
   } catch (error) {
     console.warn('Could not fetch stop notices', error)
   }
@@ -360,10 +367,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(() => board.draw(), 1000)
 
   // Several disrupted routes take turns in the details strip. Its height is
-  // fixed in the stylesheet, so a turn never changes the room the rows have.
+  // fixed in the stylesheet, so a turn should never change the room the rows
+  // have; if it ever does (a font still loading, say), the rows are measured
+  // again rather than left the wrong size.
+  const strip = document.querySelector<HTMLElement>('[data-details]')
   setInterval(() => {
+    const before = strip?.offsetHeight
     detailIndex += 1
     renderDetails(detailsFor(state, board.capacity()), detailIndex)
+    if (strip?.offsetHeight !== before) board.relayout()
   }, DETAIL_MS)
 
   let resizeTimer: number | undefined

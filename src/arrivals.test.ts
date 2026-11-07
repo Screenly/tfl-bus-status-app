@@ -98,6 +98,16 @@ describe('statusFor', () => {
     expect(statusFor('31', statuses)).toEqual(GOOD_SERVICE)
   })
 
+  test('a Special Service notice without text reads as disrupted', () => {
+    const statuses = [line('31', [0, 'Special Service', NOW_PERIOD])]
+    expect(statusFor('31', statuses)).toMatchObject({
+      tone: 'minor',
+      label: 'Disrupted',
+      note: '',
+      detail: '',
+    })
+  })
+
   test('the most disruptive status in effect wins', () => {
     const statuses = [
       line('31', [9, 'Minor Delays', NOW_PERIOD], [2, 'Suspended', NOW_PERIOD]),

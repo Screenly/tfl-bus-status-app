@@ -119,11 +119,12 @@ export function statusFor(
       const reason = status.reason ?? ''
       const label = reason
         ? describe(reason, context.stopName)
-        : status.statusSeverityDescription
+        : labelWithoutReason(status)
       return {
         tone: toneFor(status.statusSeverity),
         label,
-        note: noteFor(label),
+        // With no text there is nothing in the details strip to point to.
+        note: reason ? noteFor(label) : '',
         cause: causeOf(reason),
         detail: cleanReason(reason),
       }
@@ -131,6 +132,24 @@ export function statusFor(
     .sort((a, b) => rank(b.tone) - rank(a.tone))
 
   return ranked[0] ?? GOOD_SERVICE
+}
+
+/**
+ * What to call a notice that comes with no text. TfL's own description is fine
+ * where it says something ("Suspended", "Minor Delays"), but "Special Service"
+ * does not, so that one reads as Disrupted, the same as any notice the board
+ * cannot place.
+ */
+function labelWithoutReason(status: Status): string {
+  const description = status.statusSeverityDescription.trim()
+  if (
+    status.statusSeverity === 0 ||
+    !description ||
+    /special service/i.test(description)
+  ) {
+    return 'Disrupted'
+  }
+  return description
 }
 
 function rank(tone: Tone): number {
