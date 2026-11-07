@@ -108,6 +108,26 @@ describe('statusFor', () => {
     })
   })
 
+  test('of two notices, the one that matters more wins, whatever the order', () => {
+    const diverted =
+      'Route 31 is on diversion in both directions due to roadworks.'
+    const curtailed =
+      "Route 31 is curtailed to 'Kilburn Park' in both directions owing to a police incident."
+    for (const order of [
+      [diverted, curtailed],
+      [curtailed, diverted],
+    ]) {
+      const statuses = [
+        line(
+          '31',
+          [0, 'Special Service', NOW_PERIOD, order[0]],
+          [0, 'Special Service', NOW_PERIOD, order[1]],
+        ),
+      ]
+      expect(statusFor('31', statuses).label).toBe('Ends early')
+    }
+  })
+
   test('the most disruptive status in effect wins', () => {
     const statuses = [
       line('31', [9, 'Minor Delays', NOW_PERIOD], [2, 'Suspended', NOW_PERIOD]),

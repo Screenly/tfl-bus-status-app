@@ -103,22 +103,38 @@ function keyWord(destination: string): string {
 }
 
 /**
+ * The places a notice says buses are heading: "Putney" from "Route 265
+ * towards Putney is diverted", "Hook" from "Towards Hook buses will end".
+ * Only these clauses say which direction is affected; the rest of a notice
+ * often names the other direction's destination among the missed stops.
+ */
+export function directionsIn(reason: string): string[] {
+  const clauses: string[] = []
+  const pattern =
+    /\btowards\s+(.+?)(?=\s+(?:is|are|will|buses|bus|has|have|was|were)\b|[.,;:]|$)/gi
+  for (const match of reason.matchAll(pattern)) {
+    const place = match[1]!.trim()
+    if (place) clauses.push(place)
+  }
+  return clauses
+}
+
+/**
  * Whether a notice is about the direction this row's buses are going.
  *
  * Around half of all diversions are one way. A notice that names a
- * direction ("towards Putney") and does not mention where this row's buses
- * are heading is taken to be about the other way. Anything that says both
- * directions, or names no direction at all, applies.
+ * direction ("towards Putney") applies only to rows whose destination is in
+ * that clause. Anything that says both directions, or names no direction it
+ * can check, applies.
  */
 export function appliesTo(reason: string, destination: string): boolean {
   if (/both directions|either direction/i.test(reason)) return true
-  if (!/\btowards\b|\b(north|south|east|west)bound\b/i.test(reason)) {
-    return true
-  }
+
   const word = keyWord(destination)
-  if (!word) return true
-  // Only "towards …" can be checked against a destination; a compass
-  // direction cannot, so it is given the benefit of the doubt.
-  if (!/\btowards\b/i.test(reason)) return true
-  return reason.toLowerCase().includes(word)
+  const directions = directionsIn(reason)
+  // A compass direction ("eastbound") or no direction at all cannot be
+  // checked against a destination, so it is given the benefit of the doubt.
+  if (!word || directions.length === 0) return true
+
+  return directions.some((place) => place.toLowerCase().includes(word))
 }

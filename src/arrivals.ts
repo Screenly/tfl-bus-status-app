@@ -129,7 +129,10 @@ export function statusFor(
         detail: cleanReason(reason),
       }
     })
-    .sort((a, b) => rank(b.tone) - rank(a.tone))
+    .sort(
+      (a, b) =>
+        rank(b.tone) - rank(a.tone) || priority(a.label) - priority(b.label),
+    )
 
   return ranked[0] ?? GOOD_SERVICE
 }
@@ -150,6 +153,27 @@ function labelWithoutReason(status: Status): string {
     return 'Disrupted'
   }
   return description
+}
+
+/**
+ * Which of two notices of the same severity matters more to someone at the
+ * stop. TfL gives every bus notice the same severity, so without this the
+ * label shown would depend on the order TfL lists them in.
+ */
+const PRIORITY = [
+  'Not stopping',
+  'Not running',
+  'Ends early',
+  'Diverted',
+  'Skips stops',
+  'Delays',
+  'Fewer buses',
+  'Disrupted',
+]
+
+function priority(label: string): number {
+  const index = PRIORITY.indexOf(label)
+  return index === -1 ? PRIORITY.length : index
 }
 
 function rank(tone: Tone): number {

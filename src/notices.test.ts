@@ -1,6 +1,13 @@
 import { describe as group, expect, test } from 'bun:test'
 
-import { appliesTo, causeOf, cleanReason, describe, noteFor } from './notices'
+import {
+  appliesTo,
+  causeOf,
+  cleanReason,
+  describe,
+  directionsIn,
+  noteFor,
+} from './notices'
 
 // Real notices from the TfL API, November 2026.
 const P12 =
@@ -94,5 +101,28 @@ group('noteFor', () => {
 
   test('nothing to add for a normal route', () => {
     expect(noteFor('Normal')).toBe('')
+  })
+})
+
+group('directionsIn', () => {
+  test('the place after "towards", up to the verb', () => {
+    expect(directionsIn(R265)).toEqual(['Putney'])
+    expect(directionsIn(R276)).toEqual(['Newham Hospital'])
+  })
+
+  test('every direction a notice names', () => {
+    const notice =
+      "Towards Hook buses will end journeys at 'Roebuck Road'. Towards Kingston Hospital buses will begin journeys at 'Jubilee Way'."
+    expect(directionsIn(notice)).toEqual(['Hook', 'Kingston Hospital'])
+  })
+})
+
+group('appliesTo, other direction named among the missed stops', () => {
+  const R31 =
+    "KILBURN HIGH ROAD, NW6: Route 31 towards Camden Town is diverted and is not serving stops between 'Kilburn Park' and 'White City Bus Station'."
+
+  test('only the direction in the towards clause is affected', () => {
+    expect(appliesTo(R31, 'Camden Town')).toBe(true)
+    expect(appliesTo(R31, 'White City')).toBe(false)
   })
 })
