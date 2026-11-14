@@ -1,0 +1,709 @@
+@layer theme, base, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import '@screenly/edge-apps/styles' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@layer base {
+  /*
+   * One design in two tones. Rows sit on the page as cards, one step off it.
+   * The route badge is TfL bus red in both, with white numbers on it, the way
+   * the flag at the stop and the blind on the bus carry it.
+   */
+  :root,
+  :root[data-theme='light'] {
+    --bg: #f2f2f5;
+    --card: #ffffff;
+    --label: #000000;
+    --label-2: rgba(60, 60, 67, 0.72);
+    --label-3: rgba(60, 60, 67, 0.62);
+    --bus-red: #dc241f;
+    --on-red: #ffffff;
+    --due: #248a3d;
+    --good: #1f7a35;
+    --minor: #b25000;
+    --severe: #d70015;
+  }
+
+  :root[data-theme='dark'] {
+    --bg: #000000;
+    --card: #111114;
+    --label: #ffffff;
+    --label-2: rgba(235, 235, 245, 0.66);
+    --label-3: rgba(235, 235, 245, 0.48);
+    --bus-red: #dc241f;
+    --on-red: #ffffff;
+    --due: #30d158;
+    --good: #30d158;
+    --minor: #ff9f0a;
+    --severe: #ff453a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--label);
+    font-feature-settings: 'tnum' 1;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: column;
+    gap: 28px;
+    padding: 40px 48px 28px;
+  }
+
+  /* Where this is, and what time it is */
+
+  .masthead {
+    display: flex;
+    flex: none;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 56px;
+  }
+
+  .stop {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    gap: 36px;
+  }
+
+  /* The letter on the flag at the stop, in the red roundel it sits in there. */
+  .flag {
+    display: flex;
+    height: 112px;
+    width: 112px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bus-red);
+    color: var(--on-red);
+    font-size: 60px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .flag.is-long {
+    font-size: 46px;
+  }
+
+  .flag[hidden] {
+    display: none;
+  }
+
+  .stop-text {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .eyebrow {
+    color: var(--label-3);
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    line-height: 30px;
+    text-transform: uppercase;
+  }
+
+  .stop-name {
+    height: 84px;
+    overflow: hidden;
+    margin: 4px 0 0;
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 84px;
+    white-space: nowrap;
+  }
+
+  .towards {
+    height: 42px;
+    overflow: hidden;
+    color: var(--label-2);
+    font-size: 34px;
+    line-height: 42px;
+    white-space: nowrap;
+  }
+
+  .now {
+    flex: none;
+    padding-bottom: 4px;
+    text-align: right;
+  }
+
+  .clock {
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .freshness {
+    margin-top: 12px;
+    color: var(--label-3);
+    font-size: 25px;
+  }
+
+  /*
+   * A notice about the stop itself. It sits between the masthead and the
+   * rows, full width and in colour, because it is the one thing that can
+   * change where somebody should be standing.
+   */
+  .notice {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 28px;
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--minor) 16%, var(--card));
+    color: var(--label);
+    padding: 24px 36px;
+  }
+
+  .notice[hidden] {
+    display: none;
+  }
+
+  .notice.is-closed {
+    background: var(--severe);
+    color: #ffffff;
+  }
+
+  .notice-mark {
+    display: flex;
+    height: 64px;
+    width: 64px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--minor);
+    color: var(--card);
+    font-size: 44px;
+    font-weight: 700;
+  }
+
+  .notice.is-closed .notice-mark {
+    background: #ffffff;
+    color: var(--severe);
+  }
+
+  .notice-text {
+    display: -webkit-box;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 32px;
+    line-height: 1.3;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .notice-text b {
+    margin-right: 0.5em;
+    font-weight: 700;
+  }
+
+  /*
+   * The departures. One row per route, sized to be read from the stop: the
+   * route number and the minutes to the next bus are the two largest things
+   * on the screen. Every size is a share of the row, which the renderer
+   * measures, so a screen that fits fewer rows gets larger ones.
+   */
+  .board {
+    display: grid;
+    min-height: 0;
+    flex: 1;
+    align-content: start;
+    grid-template-rows: var(--header-height, 52px);
+    grid-auto-rows: var(--row-height);
+    --row-height: 140px;
+    --gap: max(10px, calc(var(--row-height) * 0.09));
+    /*
+     * What the type and the columns scale with: the height of a row's card.
+     * The renderer caps the row, which is what keeps the columns from
+     * crowding out the destination.
+     */
+    --u: calc(var(--row-height) - var(--gap));
+  }
+
+  /*
+   * Four columns, labelled: which bus, where to, how it is running, and how
+   * long until it is here. The heading row uses the same grid, so every
+   * label sits over its column.
+   */
+  .row {
+    display: grid;
+    min-width: 0;
+    align-items: center;
+    column-gap: calc(var(--u) * 0.26);
+    grid-template-areas: 'route destination status next';
+    grid-template-columns:
+      calc(var(--u) * 1.6) minmax(0, 1fr) calc(var(--u) * 3.1)
+      calc(var(--u) * 2.3);
+    padding: 0 calc(var(--u) * 0.26) 0 calc(var(--u) * 0.12);
+    margin-bottom: var(--gap);
+    border-radius: calc(var(--u) * 0.16);
+    background: var(--card);
+  }
+
+  .row.heading {
+    align-self: stretch;
+    align-items: end;
+    margin-bottom: 0;
+    padding-bottom: 12px;
+    background: none;
+    color: var(--label-3);
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .h-route {
+    grid-area: route;
+    text-align: center;
+  }
+
+  .h-destination {
+    grid-area: destination;
+  }
+
+  .h-status {
+    grid-area: status;
+  }
+
+  .h-next {
+    grid-area: next;
+    text-align: right;
+  }
+
+  .route {
+    display: flex;
+    height: calc(var(--u) * 0.74);
+    grid-area: route;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--u) * 0.1);
+    background: var(--bus-red);
+    color: var(--on-red);
+    font-size: calc(var(--u) * 0.56);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* "X140", "SL10": four characters need a smaller size to keep a margin. */
+  .route.is-long {
+    font-size: calc(var(--u) * 0.44);
+  }
+
+  .destination {
+    overflow: hidden;
+    grid-area: destination;
+    font-size: calc(var(--u) * 0.46);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  /*
+   * Every route says how it is running. A mark and a word, not colour alone:
+   * green tick for good service, amber or red exclamation for anything else.
+   */
+  .status {
+    display: flex;
+    min-width: 0;
+    grid-area: status;
+    align-items: center;
+    gap: 0.4em;
+    font-size: max(25px, calc(var(--u) * 0.32));
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-mark {
+    display: flex;
+    height: 1.4em;
+    width: 1.4em;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 0.9em;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  /* The word on top, and what it means for you underneath, smaller. */
+  .status-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .status-label,
+  .status-note {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-note {
+    color: var(--label-2);
+    font-size: 0.8em;
+    font-weight: 500;
+  }
+
+  .status.is-good {
+    color: var(--good);
+  }
+
+  .status.is-good .status-mark {
+    background: var(--good);
+  }
+
+  .status.is-minor {
+    color: var(--minor);
+  }
+
+  .status.is-minor .status-mark {
+    background: var(--minor);
+  }
+
+  .status.is-severe {
+    color: var(--severe);
+  }
+
+  .status.is-severe .status-mark {
+    background: var(--severe);
+  }
+
+  .next {
+    grid-area: next;
+    font-size: calc(var(--u) * 0.58);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .next .unit {
+    margin-left: 0.18em;
+    color: var(--label-2);
+    font-size: 0.5em;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  /*
+   * A solid pill rather than a colour, so "arriving now" never reads as the
+   * green of good service beside it.
+   */
+  .next.is-due {
+    justify-self: end;
+    border-radius: calc(var(--u) * 0.12);
+    background: var(--label);
+    color: var(--card);
+    font-size: calc(var(--u) * 0.46);
+    padding: 0.14em 0.4em 0.18em;
+  }
+
+  /*
+   * A line too long for its box at the smallest size it may be drawn at is
+   * carried across instead, resting at each end long enough to be read.
+   */
+  .scroller {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /*
+   * Faded at the far edge while it travels, so a name caught mid-scroll
+   * reads as carrying on rather than cut off.
+   */
+  .is-scrolling {
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 1.6em),
+      transparent 100%
+    );
+  }
+
+  .is-scrolling .scroller {
+    animation: scroll-line var(--scroll-duration, 12s) ease-in-out infinite
+      alternate;
+    will-change: transform;
+  }
+
+  @keyframes scroll-line {
+    0%,
+    12% {
+      transform: translateX(0);
+    }
+
+    88%,
+    100% {
+      transform: translateX(var(--scroll-shift, 0));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-scrolling .scroller {
+      animation: none;
+    }
+  }
+
+  /* Nothing to show, or nothing that can be shown */
+
+  .message {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 0 120px;
+    grid-row: 1 / -1;
+    text-align: center;
+  }
+
+  /* A message has the whole board, not the row the column labels use. */
+  .board:has(.message) {
+    grid-template-rows: 100%;
+    grid-auto-rows: 100%;
+  }
+
+  .message-title {
+    font-size: 64px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .message-hint {
+    max-width: 1100px;
+    color: var(--label-2);
+    font-size: 32px;
+    line-height: 1.45;
+  }
+
+  /*
+   * What is going on with a disrupted route, in TfL's own words. One route at
+   * a time, two lines at most, with the route badge so it is clear which.
+   */
+  .details {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 24px;
+    margin-top: -12px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--minor) 14%, var(--card));
+    padding: 18px 28px;
+  }
+
+  .details[hidden] {
+    display: none;
+  }
+
+  .details-route {
+    flex: none;
+    border-radius: 10px;
+    background: var(--bus-red);
+    color: var(--on-red);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 10px 16px;
+  }
+
+  /*
+   * Always two lines tall, whatever this turn says, with a shorter notice
+   * centred in that space. The rows are sized to the room left over, so a
+   * strip that grew or shrank as the notices took turns would leave them too
+   * big or too small for it.
+   */
+  .details-text {
+    display: flex;
+    height: calc(2 * 1.3em);
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    font-size: 27px;
+    line-height: 1.3;
+  }
+
+  .details-copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .details-text b {
+    margin-right: 0.4em;
+    color: var(--minor);
+    font-weight: 700;
+  }
+
+  .details-count {
+    flex: none;
+    color: var(--label-3);
+    font-size: 25px;
+    font-weight: 600;
+  }
+
+  /* TfL asks for this line wherever its data is shown. */
+  .credit {
+    display: flex;
+    height: 34px;
+    flex: none;
+    justify-content: space-between;
+    gap: 40px;
+    overflow: hidden;
+    color: var(--label-3);
+    font-size: 25px;
+    line-height: 34px;
+    white-space: nowrap;
+  }
+
+  .credit > :last-child {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  @media (orientation: portrait) {
+    #app {
+      gap: 32px;
+      padding: 60px 48px 32px;
+    }
+
+    .masthead {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 24px;
+    }
+
+    .stop {
+      gap: 28px;
+    }
+
+    .flag {
+      height: 112px;
+      width: 112px;
+      font-size: 60px;
+    }
+
+    .flag.is-long {
+      font-size: 46px;
+    }
+
+    .stop-name {
+      font-size: 64px;
+    }
+
+    .now {
+      display: flex;
+      width: 100%;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-bottom: 0;
+    }
+
+    .clock {
+      font-size: 56px;
+    }
+
+    /*
+     * Too narrow for four columns: the status moves under the destination,
+     * and has the width under the minutes too, so its words are never cut.
+     */
+    .row {
+      row-gap: calc(var(--u) * 0.06);
+      align-content: center;
+      grid-template-areas:
+        'route destination next'
+        'route status status';
+      padding-top: calc(var(--u) * 0.08);
+      padding-bottom: calc(var(--u) * 0.08);
+      grid-template-columns: calc(var(--u) * 1.5) minmax(0, 1fr) calc(
+          var(--u) * 1.9
+        );
+    }
+
+    .row.heading {
+      grid-template-areas: 'route destination next';
+    }
+
+    .h-status {
+      display: none;
+    }
+
+    .next.is-due {
+      font-size: calc(var(--u) * 0.38);
+    }
+
+    /* Two lines in one card: the destination and the status share it. */
+    .destination {
+      font-size: calc(var(--u) * 0.4);
+    }
+
+    .status {
+      font-size: max(25px, calc(var(--u) * 0.26));
+    }
+
+    .route {
+      align-self: center;
+    }
+
+    .status-text {
+      flex-direction: row;
+      gap: 0.4em;
+    }
+
+    .status-note::before {
+      content: '· ';
+    }
+
+    .details-text {
+      height: calc(3 * 1.3em);
+    }
+
+    .details-copy {
+      -webkit-line-clamp: 3;
+    }
+
+    .notice {
+      padding: 22px 28px;
+    }
+
+    .notice-text {
+      font-size: 28px;
+      -webkit-line-clamp: 3;
+    }
+  }
+}

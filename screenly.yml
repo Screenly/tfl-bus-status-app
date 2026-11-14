@@ -38,6 +38,15 @@ settings:
     type: string
     default_value: light
     title: Theme
-    optional: false
-    help_text: |
-      Select the visual theme for the application ('light' or 'dark').
+    optional: true
+    help_text:
+      schema_version: 1
+      properties:
+        type: select
+        help_text: |
+          Light suits a bus shelter or a bright lobby; dark suits a dim hall or a screen that runs through the night.
+        options:
+          - label: Light
+            value: light
+          - label: Dark
+            value: dark
